@@ -13,13 +13,13 @@ const DrawKonva = () => {
   const screenHeight = useWindowDimensions().height * 0.8;
 
   const stageRef = useRef(null);
+  const pulseRef = useRef(null);
+  const deleteRef = useRef(null);
 
   const [vertical, setVertical] = useState<number | null>(null);
   const [horizontal, setHorizontal] = useState(null);
 
   const [shapes, setShapes] = useState<any[]>([]);
-
-  const [target, setTarget] = useState(null);
 
   const [menuNode, setMenuNode] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
@@ -28,10 +28,9 @@ const DrawKonva = () => {
   const handleHorizontal = (value: any) => setHorizontal(value);
 
   const handleShapes = (value: any) => setShapes(value);
-  const handleTarget = (value: any) => setTarget(value);
 
   const handleMenuNode = async (value: any) => await setMenuNode(value);
-  const handleCurrentShape = (value: any) => setCurrentShape(value);
+  const handleCurrentShape = async (value: any) => await setCurrentShape(value);
 
   const makeMultipleOfTen = (value: any): number => {
     if (value % 10 === 0) {
@@ -85,7 +84,7 @@ const DrawKonva = () => {
 
   // 버튼 클릭시 발생하는 이벤트들
   const handleElevatorsClick = () => {
-    handleShapes([...shapes, <GenerateElevator shape={GenerateElevator} />]);
+    handleShapes([...shapes, <GenerateElevator />]);
   };
 
   const handleGatesClick = () => {
@@ -98,10 +97,6 @@ const DrawKonva = () => {
 
   const handleStairsClick = () => {
     handleShapes([...shapes, <GenerateStairs />]);
-  };
-
-  const handleDeleteClick = () => {
-    handleShapes(shapes.filter((shape) => !shape.selected));
   };
 
   const handleResetClick = () => {
@@ -129,6 +124,7 @@ const DrawKonva = () => {
     }
 
     handleCurrentShape(e.target);
+
     // show menu
     menuNode.style.display = 'initial';
     let containerRect = stageRef.current.container().getBoundingClientRect();
@@ -136,24 +132,55 @@ const DrawKonva = () => {
     menuNode.style.left = containerRect.left + stageRef.current.getPointerPosition().x + 4 + 'px';
   };
 
-  document.getElementById('delete-button')?.addEventListener('click', () => {
-    if (currentShape) currentShape.destroy();
-  });
-
+  useEffect(() => {
+    handleMenuNode(document.getElementById('menu'));
+  }, []);
   // setup menu
   useEffect(() => {
-    if (window) {
-      handleMenuNode(document.getElementById('menu'));
-      //
+    document.getElementById('pulse-button').addEventListener('click', () => {
+      if (currentShape) {
+        currentShape.to({
+          scaleX: 2,
+          scaleY: 2,
+          onFinish: () => {
+            currentShape.to({ scaleX: 1, scaleY: 1 });
+          },
+        });
+      }
+    });
 
-      window.addEventListener('click', () => {
-        // hide menu
-        if (menuNode) {
-          menuNode.style.display = 'none';
+    document.getElementById('delete-button').addEventListener('click', () => {
+      if (currentShape) currentShape.destroy();
+    });
+
+    window.addEventListener('click', () => {
+      // hide menu
+      if (menuNode) {
+        menuNode.style.display = 'none';
+      }
+    });
+
+    return () => {
+      window.removeEventListener('click', () => {
+        menuNode.style.display = 'none';
+      });
+      document.getElementById('delete-button').removeEventListener('click', () => {
+        if (currentShape) currentShape.destroy();
+      });
+      document.getElementById('pulse-button').removeEventListener('click', () => {
+        if (currentShape) {
+          currentShape.to({
+            scaleX: 2,
+            scaleY: 2,
+            onFinish: () => {
+              currentShape.to({ scaleX: 1, scaleY: 1 });
+            },
+          });
         }
       });
-    }
-  }, []);
+    };
+  }, [menuNode, currentShape]);
+  // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse ) 끝
 
   return (
     <div>
@@ -181,7 +208,6 @@ const DrawKonva = () => {
           <GeneratingButton onClick={handleGatesClick}>Gate</GeneratingButton>
           <GeneratingButton onClick={handleWorkingStageClick}>Working Stage</GeneratingButton>
           <GeneratingButton onClick={handleStairsClick}>Stairs</GeneratingButton>
-          <RedButton onClick={handleDeleteClick}>Delete</RedButton>
           <RedButton onClick={handleResetClick}>Reset</RedButton>
         </ButtonWrapper>
 
@@ -191,13 +217,12 @@ const DrawKonva = () => {
           height={screenHeight}
           visible={true}
           ref={stageRef}
-          // onClick={(e) => console.log('Stage Clicked', e)}
           onContextMenu={(e) => contextMenu(e)}
         >
           <Layer>
             {shapes.map((shape, i) => {
               return (
-                <Group key={i} draggable onClick={(e) => handleTarget(e.target)}>
+                <Group key={i} draggable>
                   {shape}
                 </Group>
               );
@@ -211,8 +236,12 @@ const DrawKonva = () => {
         </StageSize>
         <div id="menu">
           <div>
-            {/* <button id="pulse-button">Pulse</button> */}
-            <button id="delete-button">Delete</button>
+            <button id="pulse-button" ref={pulseRef}>
+              Pulse
+            </button>
+            <button id="delete-button" ref={deleteRef}>
+              Delete
+            </button>
           </div>
         </div>
       </div>

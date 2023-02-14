@@ -14,9 +14,6 @@ const NavBar = () => {
         Draw Center with Konva
       </LinkButton>
 
-      <LinkButton href="/test" className={router.pathname === 'test' ? 'active' : ''}>
-        TEst
-      </LinkButton>
       <style jsx>{`
         nav {
           background-color: none;
