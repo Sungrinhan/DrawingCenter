@@ -1,9 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import { Stage, Layer, Text, Star, Group, Rect, Line, Shape } from 'react-konva';
 import React, { useEffect, useState, useRef, ReactDOM } from 'react';
-import { GlobalLayout, StageSize, ButtonWrapper, GeneratingButton, RedButton } from '../styles/DrawKonva';
+import { GlobalLayout, StageSize, ButtonWrapper, GeneratingButton, RedButton, BlackButton } from '../styles/DrawKonva';
 import { css } from '@emotion/react';
-import { Form, Input, Button, InputNumber } from 'antd';
+import { Form, Input, Button, InputNumber, message } from 'antd';
 import useWindowDimensions from '../hooks/useWindowDimensions';
 
 import { GenerateElevator, GenerateGate, GenerateWorkingStage, GenerateStairs } from '../KonvaShapes/GenerateShapes';
@@ -20,6 +20,8 @@ const DrawKonva = () => {
   const [horizontal, setHorizontal] = useState(null);
 
   const [shapes, setShapes] = useState<any[]>([]);
+
+  const [stageShape, setStageShape] = useState([]);
 
   const [menuNode, setMenuNode] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
@@ -103,6 +105,26 @@ const DrawKonva = () => {
     handleShapes([]);
   };
 
+  const handleSave = () => {
+    if (confirm('저장하시겠습니까?')) {
+      const shapes = stageRef.current.find('Shape');
+      console.log('shapes:', shapes);
+      setStageShape([...shapes]);
+    }
+  };
+
+  const handleLoad = () => {
+    console.log('stageRef:', stageRef);
+    const layer = stageRef.current.find('Layer')[0];
+    if (stageShape.length > 0) {
+      layer.removeChildren();
+      layer.add(...stageShape);
+      stageRef.current.batchDraw();
+    } else {
+      message.warning('로드할 내용이 없습니다.');
+    }
+  };
+
   // form 버튼 클릭시 이벤트
   const onFinish = (value: any) => {
     const horizontal = value.horizontal;
@@ -115,7 +137,6 @@ const DrawKonva = () => {
   };
 
   // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse )
-
   const contextMenu = (e) => {
     e.evt.preventDefault();
     if (e.target === stageRef.current) {
@@ -159,26 +180,6 @@ const DrawKonva = () => {
         menuNode.style.display = 'none';
       }
     });
-
-    return () => {
-      window.removeEventListener('click', () => {
-        menuNode.style.display = 'none';
-      });
-      document.getElementById('delete-button').removeEventListener('click', () => {
-        if (currentShape) currentShape.destroy();
-      });
-      document.getElementById('pulse-button').removeEventListener('click', () => {
-        if (currentShape) {
-          currentShape.to({
-            scaleX: 2,
-            scaleY: 2,
-            onFinish: () => {
-              currentShape.to({ scaleX: 1, scaleY: 1 });
-            },
-          });
-        }
-      });
-    };
   }, [menuNode, currentShape]);
   // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse ) 끝
 
@@ -209,6 +210,8 @@ const DrawKonva = () => {
           <GeneratingButton onClick={handleWorkingStageClick}>Working Stage</GeneratingButton>
           <GeneratingButton onClick={handleStairsClick}>Stairs</GeneratingButton>
           <RedButton onClick={handleResetClick}>Reset</RedButton>
+          <BlackButton onClick={handleLoad}>Load</BlackButton>
+          <BlackButton onClick={handleSave}>Save</BlackButton>
         </ButtonWrapper>
 
         {/* stage */}
@@ -219,6 +222,7 @@ const DrawKonva = () => {
           ref={stageRef}
           onContextMenu={(e) => contextMenu(e)}
         >
+          {/* Shape Layer */}
           <Layer>
             {shapes.map((shape, i) => {
               return (
@@ -228,6 +232,7 @@ const DrawKonva = () => {
               );
             })}
           </Layer>
+          {/* 점선 Layer */}
           <Layer>
             {makeDottedPlaid().map((line) => {
               return line;

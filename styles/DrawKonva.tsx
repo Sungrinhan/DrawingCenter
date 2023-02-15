@@ -59,3 +59,9 @@ export const RedButton = styled(Button)`
   margin-top: 10px;
   background-color: red;
 `;
+
+export const BlackButton = styled(Button)`
+  margin-top: 10px;
+  background-color: black;
+  color: white;
+`;
