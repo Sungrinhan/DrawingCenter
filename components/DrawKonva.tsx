@@ -16,18 +16,12 @@ const DrawKonva = () => {
   const pulseRef = useRef(null);
   const deleteRef = useRef(null);
 
-  const [vertical, setVertical] = useState<number | null>(null);
-  const [horizontal, setHorizontal] = useState(null);
-
   const [shapes, setShapes] = useState<any[]>([]);
 
   const [stageShape, setStageShape] = useState([]);
 
   const [menuNode, setMenuNode] = useState(null);
   const [currentShape, setCurrentShape] = useState(null);
-
-  const handleVertical = (value: any) => setVertical(value);
-  const handleHorizontal = (value: any) => setHorizontal(value);
 
   const handleShapes = (value: any) => setShapes(value);
 
@@ -130,9 +124,6 @@ const DrawKonva = () => {
     const horizontal = value.horizontal;
     const vertical = value.vertical;
 
-    handleVertical(vertical);
-    handleHorizontal(horizontal);
-
     generateRacks(vertical, horizontal);
   };
 
@@ -180,6 +171,7 @@ const DrawKonva = () => {
         menuNode.style.display = 'none';
       }
     });
+    console.log(stageRef.current.getStage());
   }, [menuNode, currentShape]);
   // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse ) 끝
 
