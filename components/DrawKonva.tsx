@@ -28,6 +28,9 @@ const DrawKonva = () => {
   const handleMenuNode = async (value: any) => await setMenuNode(value);
   const handleCurrentShape = async (value: any) => await setCurrentShape(value);
 
+  const handleStageShape = async (value) => await setStageShape(value);
+
+  /** 입력값을 올림해주는 함수 */
   const makeMultipleOfTen = (value: any): number => {
     if (value % 10 === 0) {
       return value;
@@ -35,6 +38,7 @@ const DrawKonva = () => {
     return makeMultipleOfTen(value + 1);
   };
 
+  /**  rack 만들어주는 함수 */
   const generateRacks = (vertical: number, horizontal: number) => {
     let arr: any = [];
     const start = { x: 0, y: 200 };
@@ -63,6 +67,7 @@ const DrawKonva = () => {
     handleShapes([...shapes, ...arr]);
   };
 
+  /** 격자무늬 만들어주는 함수 */
   const makeDottedPlaid = () => {
     let newarr = [];
     let longest: number;
@@ -99,18 +104,22 @@ const DrawKonva = () => {
     handleShapes([]);
   };
 
-  const handleSave = () => {
+  /** Save 버튼 클릭시 이벤트 */
+  const handleSaveClick = () => {
     if (confirm('저장하시겠습니까?')) {
       const shapes = stageRef.current.find('Shape');
-      console.log('shapes:', shapes);
-      setStageShape([...shapes]);
+
+      handleStageShape([...shapes]);
+      alert('저장이 완료되었습니다.');
     }
   };
 
-  const handleLoad = () => {
+  /** Load 버튼 클릭시 이벤트 */
+  const handleLoadClick = () => {
     console.log('stageRef:', stageRef);
     const layer = stageRef.current.find('Layer')[0];
     if (stageShape.length > 0) {
+      console.log('layer:', layer);
       layer.removeChildren();
       layer.add(...stageShape);
       stageRef.current.batchDraw();
@@ -119,7 +128,7 @@ const DrawKonva = () => {
     }
   };
 
-  // form 버튼 클릭시 이벤트
+  /** form 버튼 (렉생성버튼) 클릭시 이벤트 */
   const onFinish = (value: any) => {
     const horizontal = value.horizontal;
     const vertical = value.vertical;
@@ -127,7 +136,7 @@ const DrawKonva = () => {
     generateRacks(vertical, horizontal);
   };
 
-  // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse )
+  /** 마우스 우클릭시 나오는 메뉴 이벤트 */
   const contextMenu = (e) => {
     e.evt.preventDefault();
     if (e.target === stageRef.current) {
@@ -144,10 +153,12 @@ const DrawKonva = () => {
     menuNode.style.left = containerRect.left + stageRef.current.getPointerPosition().x + 4 + 'px';
   };
 
+  /** 렌더링 시 #menu DOM 가져오기 */
   useEffect(() => {
     handleMenuNode(document.getElementById('menu'));
   }, []);
-  // setup menu
+
+  /** pulse btn, delete btn 기능 추가 */
   useEffect(() => {
     document.getElementById('pulse-button').addEventListener('click', () => {
       if (currentShape) {
@@ -162,7 +173,7 @@ const DrawKonva = () => {
     });
 
     document.getElementById('delete-button').addEventListener('click', () => {
-      if (currentShape) currentShape.destroy();
+      if (currentShape) currentShape.remove();
     });
 
     window.addEventListener('click', () => {
@@ -173,7 +184,6 @@ const DrawKonva = () => {
     });
     console.log(stageRef.current.getStage());
   }, [menuNode, currentShape]);
-  // 마우스 오른쪽 버튼 클릭시 발생하는 이벤트들 ( 삭제 및 pulse ) 끝
 
   return (
     <div>
@@ -202,8 +212,8 @@ const DrawKonva = () => {
           <GeneratingButton onClick={handleWorkingStageClick}>Working Stage</GeneratingButton>
           <GeneratingButton onClick={handleStairsClick}>Stairs</GeneratingButton>
           <RedButton onClick={handleResetClick}>Reset</RedButton>
-          <BlackButton onClick={handleLoad}>Load</BlackButton>
-          <BlackButton onClick={handleSave}>Save</BlackButton>
+          <BlackButton onClick={handleLoadClick}>Load</BlackButton>
+          <BlackButton onClick={handleSaveClick}>Save</BlackButton>
         </ButtonWrapper>
 
         {/* stage */}
@@ -216,6 +226,9 @@ const DrawKonva = () => {
         >
           {/* Shape Layer */}
           <Layer>
+            {makeDottedPlaid().map((line) => {
+              return line;
+            })}
             {shapes.map((shape, i) => {
               return (
                 <Group key={i} draggable>
@@ -225,11 +238,11 @@ const DrawKonva = () => {
             })}
           </Layer>
           {/* 점선 Layer */}
-          <Layer>
+          {/* <Layer>
             {makeDottedPlaid().map((line) => {
               return line;
             })}
-          </Layer>
+          </Layer> */}
         </StageSize>
         <div id="menu">
           <div>
